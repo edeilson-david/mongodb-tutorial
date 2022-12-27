@@ -1,6 +1,6 @@
 # MongoDB Basic
 
-**Pre-requisites**: The MongoDB container is running.
+**Pre-requisites**: The MongoDB container running.
 
 ## In the terminal run the following commands:
 
