@@ -134,6 +134,32 @@ db.pokemons.find({ types: "Rock"}, { name: 1, types: 1, attack: 1}).sort({ attac
 db.pokemons.find({ types: "Rock"}, { name: 1, types: 1, attack: 1}).sort({ attack: -1 }).skip(50).limit(2)
 ```
 
+# Query in embedded documents
+```shell
+# Prepare documents
+db.pokemons.deleteMany({ 
+  '_id':  {
+    "$in": [49, 104, 150, 151, 243, 561]
+  }
+})
+
+# Insert them with embedded documents
+db.pokemons.insertMany([
+  {_id: 49, types: [ 'Grass', 'Poison' ], name: 'Oddish', legendary: false, battle_points: {hp: 45, attack: 50, defense: 55, speed: 30}, generation: 1},
+  {_id: 104, types: [ 'Rock', 'Ground' ], name: 'Onix', legendary: false, battle_points: {hp: 35, attack: 45, defense: 160, speed: 70}, generation: 1},
+  {_id: 150, types: [ 'Rock', 'Water' ], name: 'Omanyte', legendary: false, battle_points: {hp: 35, attack: 40, defense: 100, speed: 35}, generation: 1},
+  {_id: 151, types: [ 'Rock', 'Water' ], name: 'Omastar', legendary: false, battle_points: {hp: 70, attack: 60, defense: 125, speed: 55}, generation: 1},
+  {_id: 243, types: [ 'Water' ], name: 'Octillery', legendary: false, battle_points: {hp: 75, attack: 105, defense: 75, speed: 45}, generation: 2},
+  {_id: 561, types: [ 'Water' ], name: 'Oshawott', legendary: false, battle_points: {hp: 55, attack: 55, defense: 45, speed: 45}, generation: 5}
+])
+
+# Find documents with 'hp' field is 35
+db.pokemons.find({"battle_points.hp": 35}, { name: 1, hp: 1})
+
+# Find documents with 'speed' greater than 35 and 'attack' greater than 50
+db.pokemons.find({"battle_points.speed": { $gt: 35}, "battle_points.attack": {$gt: 50}}, { name: 1, "battle_points.speed": 1, "battle_points.attack": 1})
+```
+
 ```shell
 # Stopping the MongoDB image
 docker stop mongodb-shell
