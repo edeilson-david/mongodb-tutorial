@@ -89,17 +89,132 @@ db.pokemons.find({ name: /^Charman/})
 db.pokemons.updateOne(
   { name: "Charmandlerise" },
   { 
-    $set: { 
+    $set: { attack: 80 },
+    $setOnInsert: {
       hp: 75,
       defense: 90,
-      attack: 198,
       speed: 120
-    },
+    }
   },
-  { upsert: true})
+  { upsert: true}
+)
 
 # Find documents
 db.pokemons.find({ name: /^Charman/})
+```
+
+## Update an array field
+```shell
+# Find document existed
+db.pokemons.find({ _id: 1 })
+
+# Update a specific element in array from query statement
+db.pokemons.updateOne({ _id: 1, types: 'Poison' }, { $set: { 'types.$': 'PoisonX' } })
+db.pokemons.find({ _id: 1 })
+
+# Update all elements in array
+db.pokemons.updateOne({ _id: 1 }, { $set: { 'types.$[]': 'PoisonY' } })
+db.pokemons.find({ _id: 1 })
+
+# Update a specific element in array
+db.pokemons.updateOne({ _id: 1 }, { $set: { 'types.0': 'PoisonZ' } })
+db.pokemons.find({ _id: 1 })
+
+# Update to initial value
+db.pokemons.updateOne({ _id: 1 }, { $set: { types: ['Grass', 'Poison'] } })
+db.pokemons.find({ _id: 1 })
+
+# Add an element to array
+db.pokemons.find({ _id: 2 }, { name: 1, types: 1 })
+db.pokemons.updateOne({ _id: 2 }, { $push: { types: 'Water' } })
+db.pokemons.find({ _id: 2 }, { name: 1, types: 1 })
+
+# Add N elements to array
+db.pokemons.updateOne({ _id: 2 }, { $push: { types: { $each: ['Fire', 'Eletric'] } } })
+db.pokemons.find({ _id: 2 }, { name: 1, types: 1 })
+
+# Add an element from specific index in array 
+db.pokemons.find({ _id: 3 }, { name: 1, types: 1 })
+db.pokemons.updateOne({ _id: 3 }, { $push: { types: { $each: ['Fire', 'Eletric'], $position: 1 } } })
+db.pokemons.find({ _id: 3 }, { name: 1, types: 1 })
+
+# Do not allows values duplicated
+db.pokemons.find({ _id: 22 }, { name: 1, types: 1 })
+db.pokemons.updateOne({ _id: 22 }, { $addToSet: { types: { $each: ['Fire', 'Flying', 'Water'] } } })
+db.pokemons.find({ _id: 22 }, { name: 1, types: 1 })
+
+# Sort element from array
+db.pokemons.updateOne({ _id: 22 }, { $push: { types: { $each: [], $sort: 1 } } })
+db.pokemons.find({ _id: 22 }, { name: 1, types: 1 })
+
+# Keeping N elements into array
+db.pokemons.updateOne({ _id: 22 }, { $push: { types: { $each: [], $slice: 3 } } })
+db.pokemons.find({ _id: 22 }, { name: 1, types: 1 })
+
+# Keeping -N elements into array
+db.pokemons.updateOne({ _id: 22 }, { $push: { types: { $each: [], $slice: -2 } } })
+db.pokemons.find({ _id: 22 }, { name: 1, types: 1 })
+```
+
+## Working array as queue
+```shell
+# Prepare document
+db.pokemons.find({ _id: 55 }, { name: 1, types: 1 })
+db.pokemons.updateOne({ _id: 55 }, { $push: { types: { $each: ['Normal', 'Fire'], $sort: 1} } })
+
+# Remove the last element
+db.pokemons.updateOne({ _id: 55 }, { $pop: { types: 1 } })
+db.pokemons.find({ _id: 55 }, { name: 1, types: 1 })
+
+# Remove the first element
+db.pokemons.find({ _id: 55 }, { name: 1, types: -1 })
+db.pokemons.find({ _id: 55 }, { name: 1, types: 1 })
+
+# Remove N elements from array
+db.pokemons.find({ _id: 365 }, { name: 1, types: 1 })
+db.pokemons.updateOne({ _id: 365 }, { $pull: { types: { $in: ['Normal', 'Fire'] } } })
+db.pokemons.find({ _id: 365 }, { name: 1, types: 1 })
+
+# Remove all elements if condition is true
+db.pokemons.updateOne({ _id: 365 }, { $pullAll: { types: ['Normal', 'Fire', 'Flying'] } })
+db.pokemons.find({ _id: 365 }, { name: 1, types: 1 })
+```
+
+## Structure of object into array
+```shell
+# Prepare document
+db.pokemons.updateOne({ _id: 365 }, { $set: { types: [ { name: 'Fire', bonus_points: 45, weakness: 'Water'}, { name: 'Rock', bonus_points: 12, weakness: 'Paper'} ] } })
+db.pokemons.find({ _id: 365 }, { name: 1, types: 1 })
+
+# Update document array
+db.pokemons.updateOne({ _id: 365, 'types.name': 'Fire' }, { $set: { 'types.$.bonus_points': 35 } })
+db.pokemons.find({ _id: 365 }, { name: 1, types: 1 })
+
+# Sort document array
+db.pokemons.updateOne({ _id: 365, }, { $push: { types: { $each: [], $sort: { weakness: -1 } } } })
+db.pokemons.find({ _id: 365 }, { name: 1, types: 1 })
+```
+
+## Find And Return
+```shell
+# Find original data
+db.pokemons.findOne({ _id: 257 })
+
+# Find and Update: will return old data
+db.pokemons.findOneAndUpdate(
+  { _id: 257 },
+  { $set: { weakness: 'Ice' }}
+)
+
+# Find original data
+db.pokemons.findOne({ _id: 258 })
+
+# Find and Update: will return new data
+db.pokemons.findOneAndUpdate(
+  { _id: 258 },
+  { $set: { weakness: 'Fire' } },
+  { returnNewDocument: true }
+)
 ```
 
 ```shell
